@@ -39,7 +39,7 @@ public class UserController {
 
     @GetMapping("/users/{id}/valid")
     public boolean userExists(@PathVariable String id) {
-        System.out.println("Vérifier qu'un identifiant existe");
+        System.out.println("Vérification que " + id + " existe");
 
         return userService.userExists(id);
     }
