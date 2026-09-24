@@ -9,6 +9,8 @@ public interface UserDao {
 
     Optional<UserEntity> findById(String id);
 
+    Optional<UserEntity> findByName(String name);
+
     void delete(String id);
 
     boolean existsById(String id);

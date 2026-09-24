@@ -60,7 +60,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(UserDao userDao) {
 
-        return username -> userDao.findById(username)
+        return username -> userDao.findByName(username)
                 .map(user -> User.withUsername(user.id)
                         .password(user.password)
                         .roles("USER")

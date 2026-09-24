@@ -27,6 +27,11 @@ public class JpaUserDao implements UserDao {
     }
 
     @Override
+    public Optional<UserEntity> findByName(String name) {
+        return userRepository.findByName(name);
+    }
+
+    @Override
     public void delete(String id) {
         userRepository.deleteById(id);
     }
