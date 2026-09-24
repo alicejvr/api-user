@@ -16,37 +16,38 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
-    // Génère un JWT
+    private SecretKey getSecretKey() {
+        return Keys.hmacShaKeyFor(
+                secret.getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
     public String generateToken(String username, List<String> roles) {
-        SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
         return Jwts.builder()
                 .subject(username)
-                .claim("roles", roles).issuedAt(new Date())
+                .claim("roles", roles)
+                .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(secretKey)
+                .signWith(getSecretKey())
                 .compact();
     }
 
-    // Récupère le username contenu dans le JWT
     public String extractUsername(String token) {
 
-        SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-
         return Jwts.parser()
-                .verifyWith(secretKey)
+                .verifyWith(getSecretKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
     }
 
-    // Vérifie si le JWT est valide
     public boolean isTokenValid(String token) {
-        try {
-            SecretKey secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
+        try {
             Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(getSecretKey())
                     .build()
                     .parseSignedClaims(token);
 
@@ -55,5 +56,15 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public List<String> extractRoles(String token) {
+
+        return Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("roles", List.class);
     }
 }

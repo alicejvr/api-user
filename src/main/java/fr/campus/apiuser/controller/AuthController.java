@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,19 +31,18 @@ public class AuthController {
             String username = request.get("username");
             String password = request.get("password");
 
-            // Vérifie le username et le mot de passe
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
-            );
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
 
-            // Si on arrive ici, l'authentification est réussie
-            String token = jwtService.generateToken(username, List.of("USER"));
+            String role = authentication.getAuthorities()
+                    .iterator()
+                    .next()
+                    .getAuthority();
+
+            String token = jwtService.generateToken(username, List.of(role));
 
             return ResponseEntity.ok(Map.of("token", token));
 
         } catch (Exception e) {
-
-            // Authentification échouée
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }

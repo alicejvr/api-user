@@ -12,4 +12,7 @@ public class UserEntity {
     public String name;
 
     public String password;
+
+    public String role;
+    // ROLE_USER / ROLE_ADMIN
 }

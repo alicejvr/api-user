@@ -3,6 +3,7 @@ package fr.campus.apiuser.controller;
 import fr.campus.apiuser.entities.UserEntity;
 import fr.campus.apiuser.service.UserService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Optional;
 
@@ -23,6 +24,7 @@ public class UserController {
         return userService.createUser(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and authentication.name == #id)")
     @GetMapping("/users/{id}")
     public Optional<UserEntity> getUser(@PathVariable String id) {
         System.out.println("Récupérer un utilisateur par son identifiant");
@@ -30,6 +32,7 @@ public class UserController {
         return userService.getUser(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/users/{id}")
     public void deleteUser(@PathVariable String id) {
         System.out.println("Supprimer un utilisateur par son identifiant");
@@ -43,13 +46,6 @@ public class UserController {
 
         return userService.userExists(id);
     }
-
-
-
-
-
-
-
 
 
 }
