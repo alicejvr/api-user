@@ -29,6 +29,10 @@ public class UserService {
         return userDao.findById(id);
     }
 
+    public Optional<UserEntity> getUserByName(String name) {
+        return userDao.findByName(name);
+    }
+
     public void deleteUser(String id) {
         userDao.delete(id);
     }

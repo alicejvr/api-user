@@ -24,6 +24,14 @@ public class UserController {
         return userService.createUser(user);
     }
 
+    @GetMapping("/users/by-name/{name}")
+    public Optional<UserEntity> getUserByName(@PathVariable String name) {
+
+        System.out.println("Récupérer un utilisateur par son nom");
+
+        return userService.getUserByName(name);
+    }
+
     @PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and authentication.name == #id)")
     @GetMapping("/users/{id}")
     public Optional<UserEntity> getUser(@PathVariable String id) {
