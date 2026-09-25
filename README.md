@@ -1,104 +1,255 @@
 # 👤 API User
 
-API REST développée avec **Java** et **Spring Boot** permettant de gérer des utilisateurs.
+> API REST de gestion des utilisateurs et d'authentification développée avec **Java et Spring Boot**.
 
-Cette application constitue un service indépendant utilisé notamment par l'application **square-games** pour vérifier l'existence d'un utilisateur.
+`api-user` constitue le **service utilisateur** de l'application Square Games.
 
-> 📚 Projet réalisé dans le cadre d'une formation en développement web / Java.
+Il est indépendant de `square-games` et communique avec celui-ci via **HTTP/REST**.
 
 ---
 
-## 🛠️ Technologies utilisées
+## 🏗️ Architecture
+
+```text
+                ┌─────────────────────────┐
+                │      🎮 square-games    │
+                │        Port 8080        │
+                │                         │
+                │  Jeux                   │
+                │  Parties                │
+                │  Interface web          │
+                └────────────┬────────────┘
+                             │
+                          HTTP/REST
+                             │
+                             ▼
+                ┌─────────────────────────┐
+                │       👤 api-user       │
+                │        Port 8081        │
+                │                         │
+                │  👤 Utilisateurs        │
+                │  🔐 Authentification    │
+                │  🎟️ JWT                │
+                └────────────┬────────────┘
+                             │
+                             ▼
+                           🗄️ MySQL
+```
+
+### 🎯 Responsabilités
+
+`api-user` gère :
+
+* 👤 les utilisateurs ;
+* 🔑 les identifiants ;
+* 🔐 l'authentification ;
+* 🛡️ les rôles ;
+* 🎟️ les JWT ;
+* ✅ la validation des utilisateurs.
+
+---
+
+## 🛠️ Technologies
+
+![Java](https://img.shields.io/badge/Java-ED8B00?logo=openjdk\&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot\&logoColor=white)
+![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity\&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql\&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens\&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-C71A36?logo=apachemaven\&logoColor=white)
+
+---
+
+## 🔐 Authentification
+
+La connexion est réalisée avec un identifiant et un mot de passe.
+
+### 🔑 Endpoint
+
+```http
+POST /auth/login
+```
+
+### 📤 Exemple de requête
+
+```json
+{
+  "username": "Alice",
+  "password": "motdepasse"
+}
+```
+
+### 📥 Réponse
+
+Lorsque les identifiants sont valides :
+
+```json
+{
+  "token": "eyJ..."
+}
+```
+
+Le token JWT contient notamment :
+
+* 👤 l'utilisateur ;
+* 🛡️ son rôle ;
+* 🕐 sa date d'émission ;
+* ⏳ sa date d'expiration.
+
+---
+
+## 👤 Gestion des utilisateurs
+
+Les utilisateurs sont stockés dans une base **MySQL**.
+
+Une entité utilisateur contient notamment :
+
+```text
+id
+name
+password
+role
+```
+
+L'identifiant de l'utilisateur est utilisé comme identifiant unique.
+
+---
+
+## 🌐 API REST
+
+| Méthode  | Endpoint            | Fonction                     |
+| -------- | ------------------- | ---------------------------- |
+| `POST`   | `/users`            | ➕ Créer un utilisateur       |
+| `GET`    | `/users/{id}`       | 🔎 Récupérer un utilisateur  |
+| `DELETE` | `/users/{id}`       | 🗑️ Supprimer un utilisateur |
+| `GET`    | `/users/{id}/valid` | ✅ Vérifier un utilisateur    |
+| `POST`   | `/auth/login`       | 🔐 Se connecter              |
+
+---
+
+## 💾 Persistance
+
+La persistance utilise :
+
+* Spring Data JPA
+* Hibernate
+* MySQL
+
+Architecture simplifiée :
+
+```text
+👤 UserEntity
+      │
+      ▼
+📋 UserDao
+      │
+      ▼
+⚙️ JpaUserDao
+      │
+      ▼
+🗃️ UserEntityRepository
+      │
+      ▼
+🗄️ MySQL
+```
+
+---
+
+## 🛡️ Sécurité
+
+Le projet utilise **Spring Security** pour gérer l'authentification.
+
+Les principaux composants sont :
+
+```text
+AuthenticationManager
+        │
+        ▼
+UserDetailsService
+        │
+        ▼
+UserDao
+        │
+        ▼
+Utilisateur
+```
+
+Après authentification, `JwtService` génère un token JWT.
+
+Ce token peut ensuite être vérifié par `square-games`.
+
+---
+
+## 🔄 Communication avec Square Games
+
+Les deux applications fonctionnent ensemble :
+
+```text
+👤 Alice
+   │
+   │ identifiant + mot de passe
+   ▼
+🎮 square-games
+   │
+   │ POST /auth/login
+   ▼
+👤 api-user
+   │
+   │ Vérification
+   │
+   │ Génération du JWT
+   ▼
+🎮 square-games
+   │
+   │ JWT
+   ▼
+🍪 Navigateur
+```
+
+Ainsi, `square-games` n'a pas besoin de gérer directement les mots de passe des utilisateurs : l'authentification est centralisée dans `api-user`.
+
+---
+
+## 📁 Structure du projet
+
+```text
+api-user/
+│
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── fr.campus.apiuser/
+│       │       ├── config/
+│       │       ├── controllers/
+│       │       ├── dao/
+│       │       ├── entities/
+│       │       ├── repositories/
+│       │       └── services/
+│       │
+│       └── resources/
+│           └── application.properties
+│
+├── pom.xml
+└── README.md
+```
+
+---
+
+## 🚀 Installation et démarrage
+
+### 📋 Prérequis
 
 * ☕ Java
-* 🌱 Spring Boot
-* 🌐 Spring Web
-* 🗄️ Spring Data JPA
-* 🐬 MySQL
-* 📖 Springdoc OpenAPI / Swagger
-* 🧪 Bruno pour les tests de l'API
 * 📦 Maven
+* 🗄️ MySQL
 
----
+### 1️⃣ Démarrer MySQL
 
-# 🏗️ Architecture
+Vérifier que le serveur MySQL utilisé par l'application est disponible.
 
-L'application suit une organisation en plusieurs couches :
+### 2️⃣ Démarrer `api-user`
 
-```text
-Client HTTP
-     │
-     ▼
-UserController
-     │
-     ▼
-UserService
-     │
-     ▼
-UserDao
-     │
-     ▼
-UserEntityRepository
-     │
-     ▼
-   MySQL
-```
-
-L'application expose une API REST accessible sur le port **8081**.
-
----
-
-# 🚀 Installation
-
-## Prérequis
-
-Installer au préalable :
-
-* Java
-* Maven
-* MySQL
-* Git
-
----
-
-## 📥 Cloner le projet
-
-```bash
-git clone <URL_DU_REPOSITORY>
-cd api-user
-```
-
----
-
-## 🗄️ Configuration MySQL
-
-Créer une base de données MySQL pour l'application.
-
-Puis renseigner les informations de connexion dans :
-
-```text
-src/main/resources/application.properties
-```
-
-Exemple :
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/api_user
-spring.datasource.username=VOTRE_UTILISATEUR
-spring.datasource.password=VOTRE_MOT_DE_PASSE
-
-spring.jpa.hibernate.ddl-auto=update
-```
-
-Adaptez les valeurs à votre environnement.
-
-> ⚠️ Ne committez pas de mot de passe ou d'autres informations sensibles dans un dépôt GitHub public.
-
----
-
-# ▶️ Démarrer l'application
-
-Depuis la racine du projet :
+Depuis le dossier du projet :
 
 ```bash
 mvn spring-boot:run
@@ -110,160 +261,65 @@ L'application démarre sur :
 http://localhost:8081
 ```
 
-Le port **8081** permet à cette application de fonctionner en parallèle de `square-games`, qui utilise le port 8080.
-
 ---
 
-# 📖 Documentation Swagger
+## 🧪 Tester l'API
 
-Une documentation interactive des endpoints est disponible avec Swagger.
+Les requêtes peuvent être testées avec **Bruno**.
 
-Une fois l'application démarrée :
-
-```text
-http://localhost:8081/swagger-ui.html
-```
-
-Swagger permet de consulter la documentation et de tester les endpoints directement depuis l'interface web.
-
----
-
-# 🔌 Endpoints
-
-## 👤 Créer un utilisateur
+### Exemple : connexion
 
 ```http
-POST /users
+POST http://localhost:8081/auth/login
 ```
 
-Exemple de corps :
+Body :
 
 ```json
 {
-  "id": "24c31cdf-33d5-78d8-93a4-43054311453b",
-  "name": "Alice"
+  "username": "Alice",
+  "password": "motdepasse"
 }
 ```
 
----
+Une connexion réussie renvoie un JWT.
 
-## 🔎 Récupérer un utilisateur
-
-```http
-GET /users/{id}
-```
-
-Exemple :
-
-```text
-GET /users/24c31cdf-33d5-78d8-93a4-43054311453b
-```
-
----
-
-## ❌ Supprimer un utilisateur
+### Exemple : récupérer un utilisateur
 
 ```http
-DELETE /users/{id}
+GET http://localhost:8081/users/{id}
 ```
 
-Exemple :
-
-```text
-DELETE /users/24c31cdf-33d5-78d8-93a4-43054311453b
-```
-
----
-
-## ✅ Vérifier l'existence d'un utilisateur
+### Exemple : vérifier un utilisateur
 
 ```http
-GET /users/{id}/valid
+GET http://localhost:8081/users/{id}/valid
 ```
 
-Cette route est notamment utilisée par `square-games`.
+---
 
-Exemple :
+## 🔒 Configuration et données sensibles
+
+La configuration se trouve dans :
 
 ```text
-GET /users/24c31cdf-33d5-78d8-93a4-43054311453b/valid
+src/main/resources/application.properties
 ```
 
-Réponse :
-
-```json
-true
-```
-
-ou :
-
-```json
-false
-```
+⚠️ Les mots de passe de base de données et autres informations sensibles ne doivent pas être publiés sur GitHub.
 
 ---
 
-# 🧪 Tester avec Bruno
+## 🔗 Projet associé
 
-Les différentes requêtes de test peuvent être regroupées dans une collection Bruno.
+🎮 **square-games**
 
-Les tests permettent notamment de vérifier :
-
-* la création d'un utilisateur ;
-* la récupération d'un utilisateur ;
-* la suppression d'un utilisateur ;
-* la vérification de l'existence d'un utilisateur ;
-* les réponses de l'API pour différents identifiants.
+Application qui utilise `api-user` pour l'authentification et la gestion des utilisateurs.
 
 ---
 
-# 🔗 Utilisation avec square-games
+## 👩‍💻 Projet
 
-`api-user` fonctionne comme un service indépendant auquel `square-games` peut envoyer des requêtes HTTP.
+Projet réalisé dans le cadre d'une formation en développement web.
 
-```text
-┌─────────────────────┐
-│    square-games     │
-│       :8080         │
-└──────────┬──────────┘
-           │
-           │ GET /users/{id}/valid
-           ▼
-┌─────────────────────┐
-│      api-user       │
-│       :8081         │
-└─────────────────────┘
-```
-
-Pour permettre à `square-games` de communiquer avec ce service, l'URL est configurée dans son fichier `application.properties` :
-
-```properties
-user-service.url=http://localhost:8081
-```
-
----
-
-# 📁 Structure du projet
-
-```text
-src/
-└── main/
-    ├── java/
-    │   └── ...
-    │       ├── controller/
-    │       ├── service/
-    │       ├── dao/
-    │       ├── entity/
-    │       └── repository/
-    │
-    └── resources/
-        └── application.properties
-```
-
----
-
-# 👩‍💻 Projet
-
-Projet réalisé dans le cadre d'une formation de développement web.
-
-Technologies principales : **Java · Spring Boot · REST API · JPA · MySQL · Swagger**
+**Java • Spring Boot • REST • JPA • MySQL • Spring Security • JWT**
